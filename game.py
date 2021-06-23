@@ -295,20 +295,21 @@ class Game():
 
     def _ask_the_question(self):
         ''' Each game has a challenge '''
-        self._timeout_id = None
-        for i in range (3):
-            self._opts[i].set_label('')
-        # Hide the dots
-        if self._game == 2:
-            for dot in self._dots:
-                dot.hide()
-        else:
-            for i in range(self._level):
-                self._dots[i].hide()
+        while(int(self.current_time) > int(1.00)):
+            self._timeout_id = None
+            for i in range (3):
+                self._opts[i].set_label('')
+            # Hide the dots
+            if self._game == 2:
+                for dot in self._dots:
+                    dot.hide()
+            else:
+                for i in range(self._level):
+                    self._dots[i].hide()
 
-        
-        if self._game == 0:
-            while(int(self.current_time) > int(1.00)):
+            
+            if self._game == 0:
+                
                 self.current_time = self.max_time_limit - (time.time() - self.start_time)
                 print("current time inside: ", self.current_time)
                 text = []
@@ -345,87 +346,88 @@ class Game():
                             image=self._opts[i].type))
                     self._opts[i].set_layer(100)
                     
-            else:
-                print("calling gameover")
-                self._game_over()
-        elif self._game == 1:
-            text = []
-            text.append("¿")
-            text.append("    recall   ")
-            text.append(" not shown ")
-            text.append("   image   ")
-            text.append("?")
-            i = 0
-            for shape in self._question_text:
-                shape.type = -1
-                shape.set_shape(self._new_dot_surface(
-                            self._colors[2]))
-                shape.set_label(text[i])
-                shape.set_layer(100)
-                i += 1
-            # Show the possible solutions
-            for i in range(3):
-                n = int(uniform(0, len(self._PATHS)))
-                while(not self._image_in_dots(n) or \
-                    self._image_in_opts(n)):
-                    n = int(uniform(0, len(self._PATHS)))
-                self._opts[i].type = n
-            self._answer = int(uniform(0, 3))
-            n = int(uniform(0, len(self._PATHS)))
-            while(self._image_in_dots(n)):
-                n = int(uniform(0, len(self._PATHS)))
-            self._opts[self._answer].type = n
-            for i in range(3):
-                self._opts[i].set_shape(self._new_dot_surface(
-                        image=self._opts[i].type))
-                self._opts[i].set_layer(100)
-        elif self._game == 3:
-            self._set_label(_('Recall which image was not shown.'))
-            # Show the possible solutions
-            for i in range(3):
-                n = int(uniform(0, len(self._CPATHS)))
-                while(not self._image_in_dots(n) or \
-                    self._image_in_opts(n)):
-                    n = int(uniform(0, len(self._CPATHS)))
-                self._opts[i].type = n
-            self._answer = int(uniform(0, 3))
-            n = int(uniform(0, len(self._CPATHS)))
-            while(self._image_in_dots(n)):
-                n = int(uniform(0, len(self._CPATHS)))
-            self._opts[self._answer].type = n
-            for i in range(3):
-                self._opts[i].set_shape(self._new_dot_surface(
-                        color_image=self._opts[i].type))
-                self._opts[i].set_layer(100)
-        elif self._game == 2:
-            text = []        
-            text.append("¿")
-            text.append("   what was ")
-            text.append(" displayed " + (str(int(self._level / 3))) + " ")
-            text.append(" time(s) ago  ")
-            text.append("?")
             
-            i = 0
-            for shape in self._question_text:
-                shape.type = -1
-                shape.set_shape(self._new_dot_surface(
-                            self._colors[2]))
-                shape.set_label(text[i])
-                shape.set_layer(100)
-                i += 1
-            # Show the possible solutions
-            for i in range(3):
-                self._answer = len(self._recall_list) - int(self._level / 3) - 1
-                n = int(uniform(0, len(self._recall_list)))
-                while n == self._answer:
+            elif self._game == 1:
+                text = []
+                text.append("¿")
+                text.append("    recall   ")
+                text.append(" not shown ")
+                text.append("   image   ")
+                text.append("?")
+                i = 0
+                for shape in self._question_text:
+                    shape.type = -1
+                    shape.set_shape(self._new_dot_surface(
+                                self._colors[2]))
+                    shape.set_label(text[i])
+                    shape.set_layer(100)
+                    i += 1
+                # Show the possible solutions
+                for i in range(3):
+                    n = int(uniform(0, len(self._PATHS)))
+                    while(not self._image_in_dots(n) or \
+                        self._image_in_opts(n)):
+                        n = int(uniform(0, len(self._PATHS)))
+                    self._opts[i].type = n
+                self._answer = int(uniform(0, 3))
+                n = int(uniform(0, len(self._PATHS)))
+                while(self._image_in_dots(n)):
+                    n = int(uniform(0, len(self._PATHS)))
+                self._opts[self._answer].type = n
+                for i in range(3):
+                    self._opts[i].set_shape(self._new_dot_surface(
+                            image=self._opts[i].type))
+                    self._opts[i].set_layer(100)
+            elif self._game == 3:
+                self._set_label(_('Recall which image was not shown.'))
+                # Show the possible solutions
+                for i in range(3):
+                    n = int(uniform(0, len(self._CPATHS)))
+                    while(not self._image_in_dots(n) or \
+                        self._image_in_opts(n)):
+                        n = int(uniform(0, len(self._CPATHS)))
+                    self._opts[i].type = n
+                self._answer = int(uniform(0, 3))
+                n = int(uniform(0, len(self._CPATHS)))
+                while(self._image_in_dots(n)):
+                    n = int(uniform(0, len(self._CPATHS)))
+                self._opts[self._answer].type = n
+                for i in range(3):
+                    self._opts[i].set_shape(self._new_dot_surface(
+                            color_image=self._opts[i].type))
+                    self._opts[i].set_layer(100)
+            elif self._game == 2:
+                text = []        
+                text.append("¿")
+                text.append("   what was ")
+                text.append(" displayed " + (str(int(self._level / 3))) + " ")
+                text.append(" time(s) ago  ")
+                text.append("?")
+                
+                i = 0
+                for shape in self._question_text:
+                    shape.type = -1
+                    shape.set_shape(self._new_dot_surface(
+                                self._colors[2]))
+                    shape.set_label(text[i])
+                    shape.set_layer(100)
+                    i += 1
+                # Show the possible solutions
+                for i in range(3):
+                    self._answer = len(self._recall_list) - int(self._level / 3) - 1
                     n = int(uniform(0, len(self._recall_list)))
-                self._opts[i].type = n
-            i = int(uniform(0, 3))
-            self._opts[i].type = self._recall_list[self._answer]
-            for i in range(3):
-                self._opts[i].set_shape(self._new_dot_surface(
-                        image=self._opts[i].type))
-                self._opts[i].set_layer(100)
+                    while n == self._answer:
+                        n = int(uniform(0, len(self._recall_list)))
+                    self._opts[i].type = n
+                i = int(uniform(0, 3))
+                self._opts[i].type = self._recall_list[self._answer]
+                for i in range(3):
+                    self._opts[i].set_shape(self._new_dot_surface(
+                            image=self._opts[i].type))
+                    self._opts[i].set_layer(100)
+        else:
+            print("calling gameover")
+            self._game_over()
 
     def restore_game(self, dot_list, correct=0, level=3, game=0, highsocre = 0):
         ''' Restore a game from the Journal '''
