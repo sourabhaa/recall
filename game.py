@@ -16,7 +16,7 @@ Three different games:
 (1) find the image not shown in the collection
 (2) recall the image shown previously
 '''
-
+import time
 import cairo
 import os
 from random import uniform
@@ -82,8 +82,9 @@ class Game():
         self._correct = 0
         self._correct_for_level = 0
         self._high_score_count = 0
-
-
+        self.max_time_limit = 20.00
+        self.start_time = time.time()
+        self.current_time = self.max_time_limit 
         # Find the image files
         self._PATHS = glob(os.path.join(self._path, 'images'), '.png')
         self._CPATHS = glob(os.path.join(self._path, 'color-images'), '*.svg')
@@ -92,10 +93,10 @@ class Game():
         self._sprites = Sprites(self._canvas)
         self._dots = []
         self._opts = []
-        self._question = []
-        self._gameover = []
-        self._score = []
-        self._highscore = []
+        self._question_text = []
+        self._gameover_text = []
+        self._score_text = []
+        self._highscore_text = []
         yoffset = int(self._space / 2.)
 
         self._line = Sprite(
@@ -126,14 +127,14 @@ class Game():
             self._opts[-1].set_label_attributes(72)
             self._opts[-1].hide()
         for x in range(2,7):
-            self._question.append(
+            self._question_text.append(
                 Sprite(self._sprites,
                     xoffset + x * (self._dot_size - 2),
                     y * (self._dot_size - 90 + self._space) + yoffset,
                     self._new_dot_surface(color=self._colors[2])))
-            self._question[-1].type = -1  # No image
-            self._question[-1].set_label_attributes(72)
-            self._question[-1].hide()
+            self._question_text[-1].type = -1  # No image
+            self._question_text[-1].set_label_attributes(72)
+            self._question_text[-1].hide()
 
     def _all_clear(self):
         ''' Things to reinitialize when starting up a new game. '''
@@ -146,14 +147,14 @@ class Game():
             self._correct_for_level = 0
 
         self._set_label('')
-        for q in self._question:
-            q.hide()
-        for g in self._gameover:
-            g.hide()
-        for s in self._score:
-            s.hide()
-        for h in self._highscore:
-            h.hide()
+        for  shape in self._question_text:
+            shape.hide()
+        for shape in self._gameover_text:
+            shape.hide()
+        for shape in self._score_text:
+            shape.hide()
+        for shape in self._highscore_text:
+            shape.hide()
         for i in range(3):
             self._opts[i].hide()
             self._opts[i].type = -1
@@ -200,7 +201,6 @@ class Game():
             if ( self._correct < 10): 
                 self._all_clear()
             else:
-                print("323G---self.game_over")
                 self._game_over()
 
     def _image_in_dots(self, n):
@@ -260,6 +260,7 @@ class Game():
 
     def _new_game(self, restore=False):
         ''' Load game images and then ask a question... '''
+        self._game = 0
         if self._game in [0, 1, 3]:
             self._choose_random_images()
         else:  # game 2
@@ -305,40 +306,48 @@ class Game():
             for i in range(self._level):
                 self._dots[i].hide()
 
+        
         if self._game == 0:
-            text = []
-            text.append("¿")  
-            text.append("    recall   ")
-            text.append(" repeated ")
-            text.append("   image   ")
-            text.append("?")
-            i = 0
-            for q in self._question:
-                q.type = -1
-                q.set_shape(self._new_dot_surface(
-                            self._colors[2]))
-                q.set_label(text[i])
-                q.set_layer(100)
-                i += 1
-            # Show the possible solutions
-            for i in range(3):
-                n = int(uniform(0, len(self._PATHS)))
-                if self._level == 3:
-                    while(n == self._dots[self._repeat].type or \
-                          self._image_in_opts(n)):
-                        n = int(uniform(0, len(self._PATHS)))
-                else:
-                    while(n == self._dots[self._repeat].type or \
-                          not self._image_in_dots(n) or \
-                          self._image_in_opts(n)):
-                        n = int(uniform(0, len(self._PATHS)))
-                self._opts[i].type = n
-            self._answer = int(uniform(0, 3))
-            self._opts[self._answer].type = self._dots[self._repeat].type
-            for i in range(3):
-                self._opts[i].set_shape(self._new_dot_surface(
-                        image=self._opts[i].type))
-                self._opts[i].set_layer(100)
+            while(int(self.current_time) > int(1.00)):
+                self.current_time = self.max_time_limit - (time.time() - self.start_time)
+                print("current time inside: ", self.current_time)
+                text = []
+                text.append("¿")  
+                text.append("    recall   ")
+                text.append(" repeated ")
+                text.append("   image   ")
+                text.append("?")
+                i = 0
+                for shape in self._question_text:
+                    shape.type = -1
+                    shape.set_shape(self._new_dot_surface(
+                                self._colors[2]))
+                    shape.set_label(text[i])
+                    shape.set_layer(100)
+                    i += 1
+                # Show the possible solutions
+                for i in range(3):
+                    n = int(uniform(0, len(self._PATHS)))
+                    if self._level == 3:
+                        while(n == self._dots[self._repeat].type or \
+                            self._image_in_opts(n)):
+                            n = int(uniform(0, len(self._PATHS)))
+                    else:
+                        while(n == self._dots[self._repeat].type or \
+                            not self._image_in_dots(n) or \
+                            self._image_in_opts(n)):
+                            n = int(uniform(0, len(self._PATHS)))
+                    self._opts[i].type = n
+                self._answer = int(uniform(0, 3))
+                self._opts[self._answer].type = self._dots[self._repeat].type
+                for i in range(3):
+                    self._opts[i].set_shape(self._new_dot_surface(
+                            image=self._opts[i].type))
+                    self._opts[i].set_layer(100)
+                    
+            else:
+                print("calling gameover")
+                self._game_over()
         elif self._game == 1:
             text = []
             text.append("¿")
@@ -347,18 +356,18 @@ class Game():
             text.append("   image   ")
             text.append("?")
             i = 0
-            for q in self._question:
-                q.type = -1
-                q.set_shape(self._new_dot_surface(
+            for shape in self._question_text:
+                shape.type = -1
+                shape.set_shape(self._new_dot_surface(
                             self._colors[2]))
-                q.set_label(text[i])
-                q.set_layer(100)
+                shape.set_label(text[i])
+                shape.set_layer(100)
                 i += 1
             # Show the possible solutions
             for i in range(3):
                 n = int(uniform(0, len(self._PATHS)))
                 while(not self._image_in_dots(n) or \
-                      self._image_in_opts(n)):
+                    self._image_in_opts(n)):
                     n = int(uniform(0, len(self._PATHS)))
                 self._opts[i].type = n
             self._answer = int(uniform(0, 3))
@@ -376,7 +385,7 @@ class Game():
             for i in range(3):
                 n = int(uniform(0, len(self._CPATHS)))
                 while(not self._image_in_dots(n) or \
-                      self._image_in_opts(n)):
+                    self._image_in_opts(n)):
                     n = int(uniform(0, len(self._CPATHS)))
                 self._opts[i].type = n
             self._answer = int(uniform(0, 3))
@@ -397,12 +406,12 @@ class Game():
             text.append("?")
             
             i = 0
-            for q in self._question:
-                q.type = -1
-                q.set_shape(self._new_dot_surface(
+            for shape in self._question_text:
+                shape.type = -1
+                shape.set_shape(self._new_dot_surface(
                             self._colors[2]))
-                q.set_label(text[i])
-                q.set_layer(100)
+                shape.set_label(text[i])
+                shape.set_layer(100)
                 i += 1
             # Show the possible solutions
             for i in range(3):
@@ -417,16 +426,14 @@ class Game():
                 self._opts[i].set_shape(self._new_dot_surface(
                         image=self._opts[i].type))
                 self._opts[i].set_layer(100)
-        else:
-            for q in self._question:
-                q.hide()
 
-    def restore_game(self, dot_list, correct=0, level=3, game=0):
+    def restore_game(self, dot_list, correct=0, level=3, game=0, highsocre = 0):
         ''' Restore a game from the Journal '''
         # TODO: Save/restore recall list for game 2
         self._correct = correct
         self._level = level
         self._game = game
+        self._high_score_count = highsocre
         for i, dot in enumerate(dot_list):
             self._dots[i].type = dot
             if dot == -1:
@@ -438,8 +445,7 @@ class Game():
         dot_list = []
         for dot in self._dots:
             dot_list.append(dot.type)
-        return dot_list, self._correct, self._level, self._game
-
+        return dot_list, self._correct , self._level, self._game, self._high_score_count
     def _set_label(self, string):
         ''' Set the label in the toolbar or the window frame. '''
         self._parent.status.set_label(string)
@@ -448,7 +454,8 @@ class Game():
         if self._timeout_id is not None:
             _logger.debug('still in timeout... ignoring click')
             return
-
+        for shape in self._question_text:
+            shape.hide()
         win.grab_focus()
         x, y = list(map(int, event.get_coords()))
 
@@ -487,8 +494,8 @@ class Game():
             for i in range(self._level):
                 self._dots[i].set_layer(100)
         else:
-            for q in self._question:
-                q.hide()
+            for shape in self._question_text:
+                shape.hide()
             for dot in self._dots:
                 dot.set_shape(self._new_dot_surface(
                         image=self._recall_list[self._answer]))
@@ -501,27 +508,29 @@ class Game():
         return True
         
     def _game_over(self):
-        for o in self._opts:
-            o.hide()
-            o.type = -1
-        for d in self._dots:
-            d.hide()
-        for q in self._question:
-            q.hide()
+        print("entered gameover")
+        for opt in self._opts:
+            opt.hide()
+            opt.type = -1
+        for dot in self._dots:
+            dot.hide()
+        for shape in self._question_text:
+            shape.hide()
+        
         yoffset = int(self._space / 4.)
         xoffset = int((self._width - 6 * self._dot_size - \
                                    5 * self._space) / 2.)
         y = 1
-        i=0
+        i = 0
         for x in range(2,6):
-            self._gameover.append(
+            self._gameover_text.append(
                 Sprite(self._sprites,
                     xoffset + (x-0.25) * (self._dot_size - 15),
                     y * (self._dot_size - 90+ self._space) + yoffset,
                     self._new_dot_surface(color=self._colors[1])))
-            self._gameover[-1].type = -1  # No image
-            self._gameover[-1].set_label_attributes(72)
-            i+=1
+            self._gameover_text[-1].type = -1  # No image
+            self._gameover_text[-1].set_label_attributes(72)
+            i += 1
         text = []
         text.append("☻")
         text.append("  Game  ")
@@ -529,55 +538,55 @@ class Game():
         text.append("☻")
         i = 0
         for x in range(4) :
-            self._gameover[x].type = -1
-            self._gameover[x].set_shape(self._new_dot_surface(
+            self._gameover_text[x].type = -1
+            self._gameover_text[x].set_shape(self._new_dot_surface(
                         self._colors[2]))
-            self._gameover[x].set_label(text[i])
-            self._gameover[x].set_layer(100)
+            self._gameover_text[x].set_label(text[i])
+            self._gameover_text[x].set_layer(100)
             i += 1
         y = 2
         for x in range(2,5):
-            self._score.append(
+            self._score_text.append(
                 Sprite(self._sprites,
                     xoffset + (x + 0.25) * (self._dot_size - 15),
                     y * (self._dot_size -30 + self._space) + yoffset,
                     self._new_dot_surface(color=self._colors[1])))
-            self._score[-1].type = -1  # No image
-            self._score[-1].set_label_attributes(72)
+            self._score_text[-1].type = -1  # No image
+            self._score_text[-1].set_label_attributes(72)
         text = []
         text.append("  your  ")
         text.append(" score:  ")
         text.append("  " + str(self._correct) + "  ")
         i = 0
         for x in range(3):
-            self._score[x].type = -1
-            self._score[x].set_shape(self._new_dot_surface(
+            self._score_text[x].type = -1
+            self._score_text[x].set_shape(self._new_dot_surface(
                         self._colors[2]))
-            self._score[x].set_label(text[i])
-            self._score[x].set_layer(100)
+            self._score_text[x].set_label(text[i])
+            self._score_text[x].set_layer(100)
             i += 1
         y = 3   
         if (self._correct > self._high_score_count):
             self._high_score_count = self._correct
         for x in range(2,5):
-            self._highscore.append(
+            self._highscore_text.append(
                 Sprite(self._sprites,
                     xoffset + (x + 0.25) * (self._dot_size - 15),
                     y * (self._dot_size -20+ self._space) + yoffset,
                     self._new_dot_surface(color=self._colors[1])))
-            self._highscore[-1].type = -1  # No image
-            self._highscore[-1].set_label_attributes(72)
+            self._highscore_text[-1].type = -1  # No image
+            self._highscore_text[-1].set_label_attributes(72)
         text = []
         text.append("  high  ")
         text.append(" score:  ")
         text.append("  " + str(self._high_score_count) + "  ")
         i = 0
         for x in range(3):
-            self._highscore[x].type = -1
-            self._highscore[x].set_shape(self._new_dot_surface(
+            self._highscore_text[x].type = -1
+            self._highscore_text[x].set_shape(self._new_dot_surface(
                         self._colors[2]))
-            self._highscore[x].set_label(text[i])
-            self._highscore[x].set_layer(100)
+            self._highscore_text[x].set_label(text[i])
+            self._highscore_text[x].set_layer(100)
             i += 1
     def _draw_cb(self, win, context):
         self.do_draw(win, context)

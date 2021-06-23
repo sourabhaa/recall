@@ -10,25 +10,24 @@
 # Foundation, 51 Franklin Street, Suite 500 Boston, MA 02110-1335 USA
 
 import gi
-gi.require_version('Gtk','3.0')
-from gi.repository import Gtk
-from gi.repository import Gdk
 
+gi.require_version('Gtk','3.0')
 import logging
+import os
 from gettext import gettext as _
 
-from toolbar_utils import button_factory, radio_factory, label_factory, \
-    separator_factory
-from utils import json_load, json_dump
-
+from gi.repository import Gdk, Gtk
 from sugar3 import profile
 from sugar3.activity import activity
-
+from sugar3.activity.widgets import ActivityToolbarButton
 from sugar3.graphics.toolbarbox import ToolbarBox
 from sugar3.activity.widgets import ActivityToolbarButton
 from sugar3.activity.widgets import StopButton
-
+from toolbar_utils import button_factory, radio_factory, label_factory, \
+    separator_factory
+from utils import json_load, json_dump
 from game import Game
+
 
 import logging
 _logger = logging.getLogger('recall-activity')
@@ -40,12 +39,12 @@ IFACE = SERVICE
 
 class RecallActivity(activity.Activity):
     """ A memory game """
-
+    
     def __init__(self, handle):
         """ Initialize the toolbars and the game board """
         super(RecallActivity, self).__init__(handle)
         self.max_participants = 1
-
+        
         self.path = activity.get_bundle_path()
 
         self.nick = profile.get_nick_name()
@@ -54,7 +53,7 @@ class RecallActivity(activity.Activity):
         else:
             self.colors = ['#A0FFA0', '#FF8080']
 
-        self._restoring = False
+        self._restoring = True
         self._setup_toolbars(True)
 
         # Create a canvas
@@ -64,7 +63,7 @@ class RecallActivity(activity.Activity):
         self.set_canvas(canvas)
         canvas.show()
         self.show_all()
-
+        self.dot_list = []
         self._game = Game(canvas, parent=self, path=self.path,
                           colors=self.colors)
         if 'dotlist' in self.metadata:
@@ -124,7 +123,7 @@ class RecallActivity(activity.Activity):
 
     def write_file(self, file_path):
         """ Write the grid status to the Journal """
-        dot_list, correct, level, game = self._game.save_game()
+        dot_list, correct, level, game, highscore = self._game.save_game()
         self.metadata['dotlist'] = ''
         for dot in dot_list:
             self.metadata['dotlist'] += str(dot)
@@ -133,6 +132,7 @@ class RecallActivity(activity.Activity):
         self.metadata['correct'] = str(correct)
         self.metadata['level'] = str(level)
         self.metadata['game'] = str(game)
+        self.metadata['highscore'] = str(highscore)
 
     def _restore(self):
         """ Restore the game state from metadata """
@@ -154,5 +154,9 @@ class RecallActivity(activity.Activity):
             self.radio[game].set_active(True)
         else:
             game = 0
-        self._game.restore_game(dot_list, correct, level, game)
+        if 'highscore' in self.metadata:
+            highscore = int(self.metadata['highscore'])
+        else:
+            highscore = 0
+        self._game.restore_game(dot_list, correct, level, game, highscore)
         self._restoring = False
